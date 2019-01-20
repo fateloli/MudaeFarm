@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 
 namespace MudaeFarm
 {
-    class Program
+    static class Program
     {
         public static ulong[] MudaeIds = new ulong[]
         {
@@ -57,7 +57,17 @@ namespace MudaeFarm
 
                 // Keep the bot running
                 // TODO: graceful shutdown?
-                await Task.Delay(-1);
+                while (true)
+                {
+                    if (_config.AutoRollInterval.HasValue)
+                    {
+                        await Task.Delay(TimeSpan.FromMinutes(_config.AutoRollInterval.Value));
+
+                        await sendRollAsync();
+                    }
+                    else
+                        await Task.Delay(1000);
+                }
 
                 // Unregister events
                 _discord.Log -= handleLogAsync;
@@ -66,6 +76,16 @@ namespace MudaeFarm
                 // Logout
                 await _discord.StopAsync();
                 await _discord.LogoutAsync();
+            }
+        }
+
+        static async Task sendRollAsync()
+        {
+            foreach (var channelId in _config.BotChannels)
+            {
+                var channel = _discord.GetChannel(channelId) as ITextChannel;
+
+                await channel.SendMessageAsync("$mu");
             }
         }
 
@@ -139,6 +159,14 @@ namespace MudaeFarm
                         m.Content = $"Anime wishlist: {string.Join(", ", _config.WishlistAnimes)}";
                     });
                     return;
+                case "setchannel":
+                    if (_config.BotChannels.Add(message.Channel.Id))
+                        _logger.LogInformation($"Added bot channel '{message.Channel.Id}'.");
+                    break;
+                case "unsetchannel":
+                    if (_config.BotChannels.Remove(message.Channel.Id))
+                        _logger.LogInformation($"Removed bot channel '{message.Channel.Id}'.");
+                    break;
             }
 
             if (string.IsNullOrWhiteSpace(argument))
@@ -161,6 +189,13 @@ namespace MudaeFarm
                 case "unwishani":
                     _config.WishlistAnimes.Remove(argument.ToLowerInvariant());
                     _logger.LogInformation($"Removed anime '{argument}' from the wishlist.");
+                    break;
+                case "rollinterval":
+                    if (double.TryParse(argument, out var rollInterval))
+                    {
+                        _config.AutoRollInterval = rollInterval;
+                        _logger.LogInformation($"Set autoroll interval to every '{rollInterval}' minutes.");
+                    }
                     break;
                 default:
                     return;
