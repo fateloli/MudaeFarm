@@ -86,6 +86,9 @@ namespace MudaeFarm
                 var channel = _discord.GetChannel(channelId) as ITextChannel;
 
                 await channel.SendMessageAsync("$mu");
+
+                // Cooldown to not spam the API
+                await Task.Delay(TimeSpan.FromSeconds(5));
             }
         }
 
