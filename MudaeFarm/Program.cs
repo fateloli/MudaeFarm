@@ -11,7 +11,7 @@ using Newtonsoft.Json;
 
 namespace MudaeFarm
 {
-    static class Program
+    class Program
     {
         public static ulong[] MudaeIds = new ulong[]
         {
