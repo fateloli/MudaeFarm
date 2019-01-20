@@ -162,11 +162,13 @@ namespace MudaeFarm
                 case "setchannel":
                     if (_config.BotChannels.Add(message.Channel.Id))
                         _logger.LogInformation($"Added bot channel '{message.Channel.Id}'.");
-                    break;
+                    await message.DeleteAsync();
+                    return;
                 case "unsetchannel":
                     if (_config.BotChannels.Remove(message.Channel.Id))
                         _logger.LogInformation($"Removed bot channel '{message.Channel.Id}'.");
-                    break;
+                    await message.DeleteAsync();
+                    return;
             }
 
             if (string.IsNullOrWhiteSpace(argument))
