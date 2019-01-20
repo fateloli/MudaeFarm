@@ -195,7 +195,7 @@ namespace MudaeFarm
                 case "rollinterval":
                     if (double.TryParse(argument, out var rollInterval))
                     {
-                        _config.AutoRollInterval = rollInterval;
+                        _config.AutoRollInterval = rollInterval == -1 ? (double?)null : rollInterval;
                         _logger.LogInformation($"Set autoroll interval to every '{rollInterval}' minutes.");
                     }
                     break;
