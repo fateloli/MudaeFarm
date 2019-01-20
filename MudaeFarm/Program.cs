@@ -220,15 +220,20 @@ namespace MudaeFarm
                 embed.Author.Value.IconUrl != null)
                 return;
 
-            var name = embed.Author.Value.Name.Trim();
-            var anime = embed.Description.Trim();
+            var name = embed.Author.Value.Name.Trim().ToLowerInvariant();
+            var anime = embed.Description.Trim().ToLowerInvariant();
+
+            if (anime.Contains('\n'))
+                return;
 
             if (_config.WishlistCharacters.Contains(name) ||
-                _config.WishlistAnimes.Contains(name))
+                _config.WishlistAnimes.Contains(anime))
             {
                 _logger.LogInformation($"Found character '{name}', trying marriage.");
 
                 await message.AddReactionAsync(new Emoji("\uD83D\uDC96"));
+                await _discord.SetStatusAsync(UserStatus.Online);
+
                 await SaveConfigAsync();
             }
             else
