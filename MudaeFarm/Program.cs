@@ -85,7 +85,7 @@ namespace MudaeFarm
             {
                 var channel = _discord.GetChannel(channelId) as ITextChannel;
 
-                await channel.SendMessageAsync('$' + _config.AutoRollGender);
+                await channel.SendMessageAsync("$" + _config.AutoRollGender);
 
                 // Cooldown to not spam the API
                 await Task.Delay(TimeSpan.FromSeconds(5));
