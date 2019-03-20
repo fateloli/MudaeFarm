@@ -211,6 +211,7 @@ namespace MudaeFarm
                         break;
                     
                     _logger.LogInformation($"Set marry target gender to '{argument}'.");
+                    break;
                 default:
                     return;
             }
