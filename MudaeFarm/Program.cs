@@ -206,7 +206,7 @@ namespace MudaeFarm
                     if (argument.ToLowerInvariant() == "waifu")
                         _config.AutoRollGender = 'w';
                     else if (argument.ToLowerInvariant() == "husbando")
-                        _config.AutoRollGender = "h';
+                        _config.AutoRollGender = 'h';
                     else
                         break;
                     
