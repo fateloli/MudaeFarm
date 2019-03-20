@@ -47,6 +47,8 @@ public static ulong[] MudaeIds = new ulong[]
 };
 ```
 
+![mudaeId](images/mudaeId.png)
+
 ## Commands
 
 Autoclaiming:
