@@ -202,6 +202,15 @@ namespace MudaeFarm
                         _logger.LogInformation($"Set autoroll interval to every '{rollInterval}' minutes.");
                     }
                     break;
+                case "marry":
+                    if (argument.ToLowerInvariant() == "waifu")
+                        _config.AutoRollGender = 'w';
+                    else if (argument.ToLowerInvariant() == "husbando")
+                        _config.AutoRollGender = "h';
+                    else
+                        break;
+                    
+                    _logger.LogInformation($"Set marry target gender to '{argument}'.");
                 default:
                     return;
             }
