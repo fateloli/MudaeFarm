@@ -36,6 +36,16 @@ DO NOT EVER SHARE THIS TOKEN WITH ANYONE. SHARING THIS TOKEN IS SHARING YOUR PAS
 
 4. Open terminal or cmd in the folder and run the following commands: `dotnet build`, `dotnet run`
 
+### Note
+
+This bot does not automatically know which Mudae maid you are using. You may need to copy the ID of Mudae maid bot and add it in `MudaeFarm/Program.cs`:
+
+```public static ulong[] MudaeIds = new ulong[]
+{
+    PASTE_MUDAE_MAID_ID_HERE
+};
+```
+
 ## Commands
 
 Autoclaiming:
