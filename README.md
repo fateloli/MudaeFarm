@@ -52,3 +52,5 @@ Autorolling:
 - `/rollinterval {minutes}` — Sets the autoroll interval in minutes. Setting this to `-1` disables autorolling.
 - `/setchannel` — Sets the channel where you send this command as a bot channel. You can do this in however many channels as you like.
 - `/unsetchannel` — Stops autorolling in the channel where you send this command.
+- '/marry waifu' — Sets marry target to waifus (`$w`). This is the default roll command.
+- '/marry husbando' — Sets marry target husbandoes (`$h`).
