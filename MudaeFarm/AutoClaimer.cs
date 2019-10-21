@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+//using System.Text.RegularExpressions;
 using Discord;
 using Discord.WebSocket;
 
@@ -106,11 +107,26 @@ namespace MudaeFarm
             if (!embed.Author.HasValue || embed.Author.Value.IconUrl != null)
                 return;
 
-            var character = embed.Author.Value.Name.Trim();
-            var anime     = embed.Description.Split('\n')[0].Trim();
+
+            var description = embed.Description.Split('\n');
+            var character = embed.Author.Value.Name.Trim().ToLowerInvariant();
+            var anime = description[0].Trim().ToLowerInvariant();
+            var KakeraValue = 0; 
+            
+            //if length >= 2 then description includes additional info
+            if(description.Length >= 2)
+            {
+                //46983... is emoji symbol
+                if(description[description.Length-1].Contains("469835869059153940"))
+                {
+                    String KakeraValueString = new String(description[description.Length-1].SkipWhile(c => !Char.IsDigit(c)).TakeWhile(Char.IsDigit).ToArray());
+                    KakeraValue = Convert.ToInt32(KakeraValueString);
+                }
+            }
 
             // matching by character and name
             var matched = false;
+            var kakeraThreshold = _config.KakeraThreshold;
 
             matched |= _config.WishedCharacterRegex?.IsMatch(character) ?? false;
             matched |= _config.WishedAnimeRegex?.IsMatch(anime) ?? false;
@@ -125,14 +141,21 @@ namespace MudaeFarm
 
                 // ensure we can claim right now
                 if (!state.CanClaim && DateTime.Now < state.ClaimReset)
+                {   
+                        Log.Warning($"{guild} {message.Channel}: Found character '{character}' but cannot claim it due to cooldown.");
+                        return;
+                }
+                //check and see if character's kakera value is at or above threshold 
+                if(KakeraValue >= kakeraThreshold)
+                { 
+                    Log.Warning($"{guild} {message.Channel}: Found character '{character}', trying marriage.");
+                }
+                else
                 {
-                    Log.Warning($"{guild} #{message.Channel}: Found character '{character}' but cannot claim it due to cooldown.");
+                    Log.Warning($"{guild} {message.Channel}: Found character '{character}' but cannot claim it due to character's kakera value '{KakeraValue}' not greater than or equal to threshold. '{kakeraThreshold}'");
                     return;
                 }
-
-                Log.Warning($"{guild} #{message.Channel}: Found character '{character}', trying claim.");
-
-                // reactions are not attached when we received this message
+                // reactions may not have been attached when we received this message
                 // remember this message so we can attach an appropriate reaction later when we receive it
                 _claimQueue[message.Id] = new ClaimQueueItem
                 {

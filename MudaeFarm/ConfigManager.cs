@@ -33,6 +33,7 @@ namespace MudaeFarm
         public bool ClaimEnabled;
         public TimeSpan ClaimDelay;
         public List<string> ClaimReplies;
+        public int KakeraThreshold;
         public TimeSpan KakeraClaimDelay;
         public HashSet<KakeraType> KakeraTargets;
         public bool ClaimCustomEmotes;
@@ -239,6 +240,7 @@ namespace MudaeFarm
 
                 ClaimEnabled      = claim.Enabled;
                 ClaimDelay        = TimeSpan.FromSeconds(claim.Delay);
+                KakeraThreshold   = claim.KakeraThreshold;
                 KakeraClaimDelay  = TimeSpan.FromSeconds(claim.KakeraDelay);
                 KakeraTargets     = claim.KakeraTargets;
                 ClaimCustomEmotes = claim.CustomEmotes;
@@ -449,6 +451,9 @@ namespace MudaeFarm
 
             [JsonProperty("delay_seconds")]
             public double Delay { get; set; } = 0.2;
+
+            [JsonProperty("kakera_threshold")]
+            public int KakeraThreshold {get; set;} = 0;
 
             [JsonProperty("kakera_delay_seconds")]
             public double KakeraDelay { get; set; } = 0.2;
