@@ -153,7 +153,7 @@ namespace MudaeFarm
                 {
                     _logger.LogWarning(e, $"Could not roll '{options.Command}' in {logPlace}.");
 
-                    await Task.Delay(TimeSpan.FromMinutes(30), cancellationToken);
+                    await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);
                     continue;
                 }
 
