@@ -98,7 +98,7 @@ Note: Legacy versions of MudaeFarm supported the excluding bracket notation like
 
 ### `#command-channels`
 
-This channel contains a list of channels in which MudaeFarm should [do rolls and other commands]. Rules:
+This channel contains a list of channels in which MudaeFarm should **do rolls and other commands**. Rules:
 
 - Send channel ID only. This can be retrieved by enabling Discord developer mode and right-clicking on a channel.
 
@@ -106,7 +106,7 @@ If MudaeFarm recognizes the ID, it will indicate success by replacing the messag
 
 ### `#claim-channels`
 
-This channel contains a list of channels in which MudaeFarm should [watch for claims and reacts]. Rules:
+This channel contains a list of channels in which MudaeFarm should **watch for claims and reacts**. Rules:
 
 - Send channel ID only. This can be retrieved by enabling Discord developer mode and right-clicking on a channel.
 
