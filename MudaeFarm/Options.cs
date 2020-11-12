@@ -123,9 +123,25 @@ namespace MudaeFarm
         public List<Item> Items { get; set; } = new List<Item>();
     }
 
-    public class BotChannelList
+    public class CommandChannelList
     {
-        public const string Section = "Bot channels";
+        public const string Section = "Command channels";
+
+        public class Item : IEquatable<Item>
+        {
+            [JsonProperty("id")]
+            public ulong Id { get; set; }
+
+            public bool Equals(Item other) => other != null && Id == other.Id;
+        }
+
+        [JsonProperty("items")]
+        public List<Item> Items { get; set; } = new List<Item>();
+    }
+
+    public class ClaimChannelList
+    {
+        public const string Section = "Claim channels";
 
         public class Item : IEquatable<Item>
         {

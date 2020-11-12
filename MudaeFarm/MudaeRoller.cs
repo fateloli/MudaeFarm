@@ -16,27 +16,27 @@ namespace MudaeFarm
     {
         readonly IDiscordClientService _discord;
         readonly IOptionsMonitor<RollingOptions> _options;
-        readonly IOptionsMonitor<BotChannelList> _channelList;
+        readonly IOptionsMonitor<CommandChannelList> _commandChannelList;
         readonly IMudaeCommandHandler _commandHandler;
         readonly IMudaeOutputParser _outputParser;
         readonly ILogger<MudaeRoller> _logger;
 
-        public MudaeRoller(IDiscordClientService discord, IOptionsMonitor<RollingOptions> options, IOptionsMonitor<BotChannelList> channelList, IMudaeCommandHandler commandHandler, IMudaeOutputParser outputParser, ILogger<MudaeRoller> logger)
+        public MudaeRoller(IDiscordClientService discord, IOptionsMonitor<RollingOptions> options, IOptionsMonitor<CommandChannelList> commandChannelList, IMudaeCommandHandler commandHandler, IMudaeOutputParser outputParser, ILogger<MudaeRoller> logger)
         {
-            _discord        = discord;
-            _options        = options;
-            _channelList    = channelList;
-            _commandHandler = commandHandler;
-            _outputParser   = outputParser;
-            _logger         = logger;
+            _discord            = discord;
+            _options            = options;
+            _commandChannelList = commandChannelList;
+            _commandHandler     = commandHandler;
+            _outputParser       = outputParser;
+            _logger             = logger;
         }
 
         sealed class Roller
         {
             public readonly CancellationTokenSource Cancellation;
-            public readonly BotChannelList.Item CurrentItem;
+            public readonly CommandChannelList.Item CurrentItem;
 
-            public Roller(BotChannelList.Item item, CancellationToken cancellationToken)
+            public Roller(CommandChannelList.Item item, CancellationToken cancellationToken)
             {
                 Cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 CurrentItem  = item;
@@ -48,7 +48,7 @@ namespace MudaeFarm
             var client  = await _discord.GetClientAsync();
             var rollers = new Dictionary<ulong, Roller>();
 
-            void handleChange(BotChannelList o)
+            void handleChange(CommandChannelList o)
             {
                 var items = o.Items.GroupBy(x => x.Id).ToDictionary(x => x.Key, x => x.First());
 
@@ -88,11 +88,11 @@ namespace MudaeFarm
                 }
             }
 
-            var monitor = _channelList.OnChange(handleChange);
+            var monitor = _commandChannelList.OnChange(handleChange);
 
             try
             {
-                handleChange(_channelList.CurrentValue);
+                handleChange(_commandChannelList.CurrentValue);
 
                 await Task.Delay(-1, stoppingToken);
             }
@@ -110,20 +110,20 @@ namespace MudaeFarm
             }
         }
 
-        async Task RunAsync(DiscordClient client, BotChannelList.Item channelItem, CancellationToken cancellationToken = default)
+        async Task RunAsync(DiscordClient client, CommandChannelList.Item commandChannelItem, CancellationToken cancellationToken = default)
         {
-            if (!(client.GetChannel(channelItem.Id) is IMessageChannel channel))
+            if (!(client.GetChannel(commandChannelItem.Id) is IMessageChannel commandChannel))
             {
-                _logger.LogWarning($"Could not find channel {channelItem.Id} to roll in.");
+                _logger.LogWarning($"Could not find channel {commandChannelItem.Id} to roll in.");
                 return;
             }
 
-            await Task.WhenAll(RunRollAsync(client, channel, cancellationToken), RunDailyKakeraAsync(channel, cancellationToken), RunPokerollAsync(channel, cancellationToken));
+            await Task.WhenAll(RunRollAsync(client, commandChannel, cancellationToken), RunDailyKakeraAsync(commandChannel, cancellationToken), RunPokerollAsync(commandChannel, cancellationToken));
         }
 
-        async Task RunRollAsync(DiscordClient client, IMessageChannel channel, CancellationToken cancellationToken = default)
+        async Task RunRollAsync(DiscordClient client, IMessageChannel commandChannel, CancellationToken cancellationToken = default)
         {
-            var logPlace = $"channel '{channel.Name}' ({channel.Id})";
+            var logPlace = $"channel '{commandChannel.Name}' ({commandChannel.Id})";
 
             var batches = 0;
             var rolls   = 0;
@@ -142,18 +142,18 @@ namespace MudaeFarm
 
                 try
                 {
-                    using (channel.Typing())
+                    using (commandChannel.Typing())
                     {
                         await Task.Delay(TimeSpan.FromSeconds(options.TypingDelaySeconds), cancellationToken);
 
-                        response = await _commandHandler.SendAsync(channel, options.Command, cancellationToken);
+                        response = await _commandHandler.SendAsync(commandChannel, options.Command, cancellationToken);
                     }
                 }
                 catch (Exception e)
                 {
                     _logger.LogWarning(e, $"Could not roll '{options.Command}' in {logPlace}.");
 
-                    await Task.Delay(TimeSpan.FromMinutes(30), cancellationToken);
+                    await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
                     continue;
                 }
 
@@ -204,9 +204,9 @@ namespace MudaeFarm
             }
         }
 
-        async Task RunDailyKakeraAsync(IMessageChannel channel, CancellationToken cancellationToken = default)
+        async Task RunDailyKakeraAsync(IMessageChannel commandChannel, CancellationToken cancellationToken = default)
         {
-            var logPlace = $"channel '{channel.Name}' ({channel.Id})";
+            var logPlace = $"channel '{commandChannel.Name}' ({commandChannel.Id})";
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -222,18 +222,18 @@ namespace MudaeFarm
 
                 try
                 {
-                    using (channel.Typing())
+                    using (commandChannel.Typing())
                     {
                         await Task.Delay(TimeSpan.FromSeconds(options.TypingDelaySeconds), cancellationToken);
 
-                        response = await _commandHandler.SendAsync(channel, options.DailyKakeraCommand, cancellationToken);
+                        response = await _commandHandler.SendAsync(commandChannel, options.DailyKakeraCommand, cancellationToken);
                     }
                 }
                 catch (Exception e)
                 {
                     _logger.LogWarning(e, $"Could not roll daily kakera in {logPlace}.");
 
-                    await Task.Delay(TimeSpan.FromMinutes(30), cancellationToken);
+                    await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);
                     continue;
                 }
 
@@ -252,9 +252,9 @@ namespace MudaeFarm
             }
         }
 
-        async Task RunPokerollAsync(IMessageChannel channel, CancellationToken cancellationToken = default)
+        async Task RunPokerollAsync(IMessageChannel commandChannel, CancellationToken cancellationToken = default)
         {
-            var logPlace = $"channel '{channel.Name}' ({channel.Id})";
+            var logPlace = $"channel '{commandChannel.Name}' ({commandChannel.Id})";
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -270,18 +270,18 @@ namespace MudaeFarm
 
                 try
                 {
-                    using (channel.Typing())
+                    using (commandChannel.Typing())
                     {
                         await Task.Delay(TimeSpan.FromSeconds(options.TypingDelaySeconds), cancellationToken);
 
-                        response = await _commandHandler.SendAsync(channel, options.PokerollCommand, cancellationToken);
+                        response = await _commandHandler.SendAsync(commandChannel, options.PokerollCommand, cancellationToken);
                     }
                 }
                 catch (Exception e)
                 {
                     _logger.LogWarning(e, $"Could not do pokeroll in {logPlace}.");
 
-                    await Task.Delay(TimeSpan.FromMinutes(30), cancellationToken);
+                    await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);
                     continue;
                 }
 

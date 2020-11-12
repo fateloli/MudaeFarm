@@ -127,7 +127,8 @@ namespace MudaeFarm
             var information = await guild.CreateTextChannelAsync("information", c => c.Topic = $"MudaeFarm: **{_client.CurrentUser.Id}**\nProfile: **{_credentials.SelectedProfile}**\nVersion: {Updater.CurrentVersion.ToString(3)}");
             await guild.CreateTextChannelAsync("wished-characters", c => c.Topic = "Configure your character wishlist here. Glob expressions are supported. Names are *case-insensitive*.");
             await guild.CreateTextChannelAsync("wished-anime", c => c.Topic      = "Configure your anime wishlist here. Glob expressions are supported. Names are *case-insensitive*.");
-            await guild.CreateTextChannelAsync("bot-channels", c => c.Topic      = "Configure channels to enable MudaeFarm autorolling/claiming by sending the __channel ID__.");
+            await guild.CreateTextChannelAsync("command-channels", c => c.Topic      = "Configure channels to enable MudaeFarm autorolling by sending the __channel ID__.");
+            await guild.CreateTextChannelAsync("claim-channels", c => c.Topic = "Configure channels to enable MudaeFarm claiming by sending the __channel ID__.");
             await guild.CreateTextChannelAsync("claim-replies", c => c.Topic     = "Configure automatic reply messages when you claim a character. One message is randomly selected. Refer to https://github.com/chiyadev/MudaeFarm for advanced templating.");
             await guild.CreateTextChannelAsync("wishlist-users", c => c.Topic    = "Configure wishlists of other users to be claimed by sending the __user ID__.");
 
@@ -269,8 +270,8 @@ Check <https://github.com/chiyadev/MudaeFarm> for detailed usage guidelines!
                         SetSection(AnimeWishlist.Section, anime);
                         break;
 
-                    case "bot-channels":
-                        var channels = new BotChannelList();
+                    case "command-channels":
+                        var commandChannels = new CommandChannelList();
 
                         await foreach (var message in EnumerateMessagesAsync(channel, cancellationToken))
                         {
@@ -279,22 +280,50 @@ Check <https://github.com/chiyadev/MudaeFarm> for detailed usage guidelines!
                                 if (_client.GetChannel(id) is IGuildChannel c)
                                     await message.ModifyAsync(m => m.Content = $"<#{id}> - **{_client.GetGuild(c.GuildId).Name}**");
 
-                                channels.Items.Add(new BotChannelList.Item { Id = id });
+                                commandChannels.Items.Add(new CommandChannelList.Item { Id = id });
                                 continue;
                             }
 
-                            var mentionedChannel = message.GetChannelIds().FirstOrDefault();
+                            var mentionedCommandChannel = message.GetChannelIds().FirstOrDefault();
 
-                            if (mentionedChannel != 0)
+                            if (mentionedCommandChannel != 0)
                             {
-                                channels.Items.Add(new BotChannelList.Item { Id = mentionedChannel });
+                                commandChannels.Items.Add(new CommandChannelList.Item { Id = mentionedCommandChannel });
                                 continue;
                             }
 
-                            channels.Items.Add(DeserializeOrCreate<BotChannelList.Item>(message.Content, (x, v) => x.Id = ulong.Parse(v)));
+                            commandChannels.Items.Add(DeserializeOrCreate<CommandChannelList.Item>(message.Content, (x, v) => x.Id = ulong.Parse(v)));
                         }
 
-                        SetSection(BotChannelList.Section, channels);
+                        SetSection(CommandChannelList.Section, commandChannels);
+                        break;
+
+                    case "claim-channels":
+                        var claimChannels = new ClaimChannelList();
+
+                        await foreach (var message in EnumerateMessagesAsync(channel, cancellationToken))
+                        {
+                            if (ulong.TryParse(message.Content, out var id))
+                            {
+                                if (_client.GetChannel(id) is IGuildChannel c)
+                                    await message.ModifyAsync(m => m.Content = $"<#{id}> - **{_client.GetGuild(c.GuildId).Name}**");
+
+                                claimChannels.Items.Add(new ClaimChannelList.Item { Id = id });
+                                continue;
+                            }
+
+                            var mentionedClaimChannel = message.GetChannelIds().FirstOrDefault();
+
+                            if (mentionedClaimChannel != 0)
+                            {
+                                claimChannels.Items.Add(new ClaimChannelList.Item { Id = mentionedClaimChannel });
+                                continue;
+                            }
+
+                            claimChannels.Items.Add(DeserializeOrCreate<ClaimChannelList.Item>(message.Content, (x, v) => x.Id = ulong.Parse(v)));
+                        }
+
+                        SetSection(ClaimChannelList.Section, claimChannels);
                         break;
 
                     case "claim-replies":

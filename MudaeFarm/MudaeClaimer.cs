@@ -21,21 +21,21 @@ namespace MudaeFarm
         readonly IMudaeClaimCharacterFilter _characterFilter;
         readonly IMudaeClaimEmojiFilter _claimEmojiFilter;
         readonly IOptionsMonitor<ClaimingOptions> _options;
-        readonly IOptionsMonitor<BotChannelList> _channelList;
+        readonly IOptionsMonitor<ClaimChannelList> _claimChannelList;
         readonly IMudaeCommandHandler _commandHandler;
         readonly IMudaeOutputParser _outputParser;
         readonly IMudaeReplySender _replySender;
         readonly INotificationSender _notification;
         readonly ILogger<MudaeClaimer> _logger;
 
-        public MudaeClaimer(IDiscordClientService discord, IMudaeUserFilter userFilter, IMudaeClaimCharacterFilter characterFilter, IMudaeClaimEmojiFilter claimEmojiFilter, IOptionsMonitor<ClaimingOptions> options, IOptionsMonitor<BotChannelList> channelList, IMudaeCommandHandler commandHandler, IMudaeOutputParser outputParser, IMudaeReplySender replySender, INotificationSender notification, ILogger<MudaeClaimer> logger)
+        public MudaeClaimer(IDiscordClientService discord, IMudaeUserFilter userFilter, IMudaeClaimCharacterFilter characterFilter, IMudaeClaimEmojiFilter claimEmojiFilter, IOptionsMonitor<ClaimingOptions> options, IOptionsMonitor<ClaimChannelList> claimChannelList, IMudaeCommandHandler commandHandler, IMudaeOutputParser outputParser, IMudaeReplySender replySender, INotificationSender notification, ILogger<MudaeClaimer> logger)
         {
             _discord          = discord;
             _userFilter       = userFilter;
             _characterFilter  = characterFilter;
             _claimEmojiFilter = claimEmojiFilter;
             _options          = options;
-            _channelList      = channelList;
+            _claimChannelList = claimChannelList;
             _commandHandler   = commandHandler;
             _outputParser     = outputParser;
             _replySender      = replySender;
@@ -96,14 +96,14 @@ namespace MudaeFarm
             var options = _options.CurrentValue;
 
             // enabled, message author is mudae, channel is configured, embed exists
-            if (!options.Enabled || !(e.Message is IUserMessage message && _userFilter.IsMudae(message.Author)) || _channelList.CurrentValue.Items.All(x => x.Id != message.ChannelId) || message.Embeds.Count == 0)
+            if (!options.Enabled || !(e.Message is IUserMessage message && _userFilter.IsMudae(message.Author)) || _claimChannelList.CurrentValue.Items.All(x => x.Id != message.ChannelId) || message.Embeds.Count == 0)
                 return;
 
             var stopwatch = Stopwatch.StartNew();
 
-            var channel  = (IMessageChannel) e.Client.GetChannel(message.ChannelId);
-            var guild    = channel is IGuildChannel gc ? e.Client.GetGuild(gc.GuildId) : null;
-            var logPlace = $"channel '{channel.Name}' ({channel.Id}, server '{guild?.Name}')";
+            var claimChannel  = (IMessageChannel) e.Client.GetChannel(message.ChannelId);
+            var guild    = claimChannel is IGuildChannel gc ? e.Client.GetGuild(gc.GuildId) : null;
+            var logPlace = $"channel '{claimChannel.Name}' ({claimChannel.Id}, server '{guild?.Name}')";
 
             var embed       = message.Embeds[0];
             var description = embed.Description.Split('\n', StringSplitOptions.RemoveEmptyEntries);
@@ -115,7 +115,7 @@ namespace MudaeFarm
 
             _logger.LogDebug($"Detected character '{character}' in {logPlace}.");
 
-            _pendingKakeraClaims[message.Id] = new PendingClaim(logPlace, channel, message, character, stopwatch);
+            _pendingKakeraClaims[message.Id] = new PendingClaim(logPlace, claimChannel, message, character, stopwatch);
 
             // ignore already claimed
             if (embed.Footer?.Text.StartsWith("belongs", StringComparison.OrdinalIgnoreCase) == true)
@@ -131,7 +131,7 @@ namespace MudaeFarm
             }
 
             // check cooldown
-            var state = _states.GetOrAdd(channel.Id, new ClaimState());
+            var state = _states.GetOrAdd(claimChannel.Id, new ClaimState());
             var now   = DateTime.Now;
 
             if (!options.IgnoreCooldown && now < state.CooldownResetTime)
@@ -142,7 +142,7 @@ namespace MudaeFarm
 
             _logger.LogWarning($"Attempting to claim character '{character}' in {logPlace}...");
 
-            _pendingClaims[message.Id] = new PendingClaim(logPlace, channel, message, character, stopwatch);
+            _pendingClaims[message.Id] = new PendingClaim(logPlace, claimChannel, message, character, stopwatch);
         }
 
         readonly struct PendingClaim
@@ -150,26 +150,26 @@ namespace MudaeFarm
             public readonly DateTime CreatedTime;
 
             public readonly string LogPlace;
-            public readonly IMessageChannel Channel;
+            public readonly IMessageChannel ClaimChannel;
             public readonly IUserMessage Message;
             public readonly CharacterInfo Character;
             public readonly Stopwatch Stopwatch;
 
-            public PendingClaim(string logPlace, IMessageChannel channel, IUserMessage message, CharacterInfo character, Stopwatch stopwatch)
+            public PendingClaim(string logPlace, IMessageChannel claimChannel, IUserMessage message, CharacterInfo character, Stopwatch stopwatch)
             {
                 CreatedTime = DateTime.Now;
 
                 LogPlace  = logPlace;
-                Channel   = channel;
+                ClaimChannel = claimChannel;
                 Message   = message;
                 Character = character;
                 Stopwatch = stopwatch;
             }
 
-            public void Deconstruct(out string logPlace, out IMessageChannel channel, out IUserMessage message, out CharacterInfo character, out Stopwatch stopwatch)
+            public void Deconstruct(out string logPlace, out IMessageChannel claimChannel, out IUserMessage message, out CharacterInfo character, out Stopwatch stopwatch)
             {
                 logPlace  = LogPlace;
-                channel   = Channel;
+                claimChannel = ClaimChannel;
                 message   = Message;
                 character = Character;
                 stopwatch = Stopwatch;
@@ -185,7 +185,7 @@ namespace MudaeFarm
 
             if (_claimEmojiFilter.IsClaimEmoji(e.Emoji) && _pendingClaims.TryRemove(e.Message.Id, out var claim))
             {
-                var (logPlace, channel, message, character, stopwatch) = claim;
+                var (logPlace, claimChannel, message, character, stopwatch) = claim;
 
                 await Task.Delay(TimeSpan.FromSeconds(options.DelaySeconds));
 
@@ -200,7 +200,7 @@ namespace MudaeFarm
                     Anime = character.DisplayAnime
                 };
 
-                await _replySender.SendAsync(channel, ReplyEvent.BeforeClaim, replySubs);
+                await _replySender.SendAsync(claimChannel, ReplyEvent.BeforeClaim, replySubs);
 
                 IUserMessage response;
 
@@ -221,7 +221,7 @@ namespace MudaeFarm
                     if (options.NotifyOnCharacter)
                         _notification.SendToast($"Claimed character '{character}' in {logPlace}.");
 
-                    await _replySender.SendAsync(channel, ReplyEvent.ClaimSucceeded, replySubs);
+                    await _replySender.SendAsync(claimChannel, ReplyEvent.ClaimSucceeded, replySubs);
 
                     return;
                 }
@@ -232,7 +232,7 @@ namespace MudaeFarm
 
                     _logger.LogWarning($"Could not claim character '{character}' in {logPlace} due to cooldown. Cooldown finishes in {resetTime}.");
 
-                    await _replySender.SendAsync(channel, ReplyEvent.ClaimFailed, replySubs);
+                    await _replySender.SendAsync(claimChannel, ReplyEvent.ClaimFailed, replySubs);
                     return;
                 }
 
@@ -244,10 +244,10 @@ namespace MudaeFarm
 
             else if (_claimEmojiFilter.IsKakeraEmoji(e.Emoji, out var kakera) && _pendingKakeraClaims.TryRemove(e.Message.Id, out claim))
             {
-                var (logPlace, channel, message, character, stopwatch) = claim;
+                var (logPlace, claimChannel, message, character, stopwatch) = claim;
 
                 // check cooldown here (to allow skipping cooldown check for purple kakera)
-                var state = _states.GetOrAdd(channel.Id, new ClaimState());
+                var state = _states.GetOrAdd(claimChannel.Id, new ClaimState());
                 var now   = DateTime.Now;
 
                 if (!options.KakeraIgnoreCooldown && now < state.KakeraResetTime && kakera != KakeraType.Purple)
@@ -267,7 +267,7 @@ namespace MudaeFarm
                     Kakera = kakera.ToString()
                 };
 
-                await _replySender.SendAsync(channel, ReplyEvent.BeforeKakera, replySubs);
+                await _replySender.SendAsync(claimChannel, ReplyEvent.BeforeKakera, replySubs);
 
                 IUserMessage response;
 
@@ -288,7 +288,7 @@ namespace MudaeFarm
                     if (options.NotifyOnKakera)
                         _notification.SendToast($"Claimed {kakera} kakera in {logPlace}.");
 
-                    await _replySender.SendAsync(channel, ReplyEvent.KakeraSucceeded, replySubs);
+                    await _replySender.SendAsync(claimChannel, ReplyEvent.KakeraSucceeded, replySubs);
                     return;
                 }
 
@@ -298,7 +298,7 @@ namespace MudaeFarm
 
                     _logger.LogWarning($"Could not claim {kakera} kakera on character '{character}' in {logPlace} due to cooldown. Kakera is reset in {resetTime}.");
 
-                    await _replySender.SendAsync(channel, ReplyEvent.KakeraFailed, replySubs);
+                    await _replySender.SendAsync(claimChannel, ReplyEvent.KakeraFailed, replySubs);
                     return;
                 }
 
