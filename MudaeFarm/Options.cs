@@ -90,9 +90,6 @@ namespace MudaeFarm
 
         [JsonProperty("pokeroll_command")]
         public string PokerollCommand { get; set; } = "$p";
-
-        [JsonProperty("pokeroll_wait_hours")]
-        public int PokerollWaitHours { get; set; } = 2;
     }
 
     public class CharacterWishlist
