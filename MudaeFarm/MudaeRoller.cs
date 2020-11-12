@@ -118,7 +118,7 @@ namespace MudaeFarm
                 return;
             }
 
-            await Task.WhenAll(RunRollAsync(client, channel, cancellationToken), RunDailyKakeraAsync(channel, cancellationToken));
+            await Task.WhenAll(RunRollAsync(client, channel, cancellationToken), RunDailyKakeraAsync(channel, cancellationToken), RunPokerollAsync(channel, cancellationToken));
         }
 
         async Task RunRollAsync(DiscordClient client, IMessageChannel channel, CancellationToken cancellationToken = default)
@@ -153,7 +153,7 @@ namespace MudaeFarm
                 {
                     _logger.LogWarning(e, $"Could not roll '{options.Command}' in {logPlace}.");
 
-                    await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);
+                    await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
                     continue;
                 }
 
@@ -233,7 +233,7 @@ namespace MudaeFarm
                 {
                     _logger.LogWarning(e, $"Could not roll daily kakera in {logPlace}.");
 
-                    await Task.Delay(TimeSpan.FromMinutes(30), cancellationToken);
+                    await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);
                     continue;
                 }
 
@@ -249,6 +249,53 @@ namespace MudaeFarm
                 _logger.LogInformation($"Claimed daily kakera in {logPlace}.");
 
                 await Task.Delay(TimeSpan.FromHours(options.DailyKakeraWaitHours), cancellationToken);
+            }
+        }
+
+        async Task RunPokerollAsync(IMessageChannel channel, CancellationToken cancellationToken = default)
+        {
+            var logPlace = $"channel '{channel.Name}' ({channel.Id})";
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var options = _options.CurrentValue;
+
+                if (!options.PokerollEnabled)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                    continue;
+                }
+
+                IUserMessage response;
+
+                try
+                {
+                    using (channel.Typing())
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(options.TypingDelaySeconds), cancellationToken);
+
+                        response = await _commandHandler.SendAsync(channel, options.PokerollCommand, cancellationToken);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _logger.LogWarning(e, $"Could not do pokeroll in {logPlace}.");
+
+                    await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);
+                    continue;
+                }
+
+                if (_outputParser.TryParseTime(response.Content, out var resetTime))
+                {
+                    _logger.LogInformation($"Could not do pokeroll in {logPlace}. Next reset in {resetTime}.");
+
+                    await Task.Delay(resetTime, cancellationToken);
+                    continue;
+                }
+
+                _logger.LogInformation($"Did pokeroll in {logPlace}.");
+
+                await Task.Delay(TimeSpan.FromHours(options.PokerollWaitHours), cancellationToken);
             }
         }
     }
