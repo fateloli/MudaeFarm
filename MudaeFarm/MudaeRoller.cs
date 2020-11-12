@@ -153,7 +153,7 @@ namespace MudaeFarm
                 {
                     _logger.LogWarning(e, $"Could not roll '{options.Command}' in {logPlace}.");
 
-                    await Task.Delay(TimeSpan.FromMinutes(15), cancellationToken);
+                    await Task.Delay(TimeSpan.FromMinutes(30), cancellationToken);
                     continue;
                 }
 
@@ -295,7 +295,7 @@ namespace MudaeFarm
 
                 _logger.LogInformation($"Did pokeroll in {logPlace}.");
 
-                await Task.Delay(TimeSpan.FromHours(options.PokerollWaitHours), cancellationToken);
+                await Task.Delay(TimeSpan.FromHours(2), cancellationToken);
             }
         }
     }
