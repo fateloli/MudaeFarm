@@ -96,13 +96,23 @@ For example,
 
 Note: Legacy versions of MudaeFarm supported the excluding bracket notation like `is the order a rabbit? (excluding: chino kafuu)`. This was not very flexible, and is not supported by current versions of MudaeFarm, so you must use JSON objects instead.
 
-### `#bot-channels`
+### `#command-channels`
 
-This channel contains a list of channels in which MudaeFarm should roll and claim. Rules:
+This channel contains a list of channels in which MudaeFarm should [do rolls and other commands]. Rules:
 
 - Send channel ID only. This can be retrieved by enabling Discord developer mode and right-clicking on a channel.
 
 If MudaeFarm recognizes the ID, it will indicate success by replacing the message with a tagged channel.
+
+### `#claim-channels`
+
+This channel contains a list of channels in which MudaeFarm should [watch for claims and reacts]. Rules:
+
+- Send channel ID only. This can be retrieved by enabling Discord developer mode and right-clicking on a channel.
+
+If MudaeFarm recognizes the ID, it will indicate success by replacing the message with a tagged channel.
+
+- Generally, any channel ID put into #command-channels should be repeated here but not all channels here should be repeated in #command-channels.
 
 ### `#claim-replies`
 
