@@ -153,7 +153,7 @@ namespace MudaeFarm
                 {
                     _logger.LogWarning(e, $"Could not roll '{options.Command}' in {logPlace}.");
 
-                    await Task.Delay(TimeSpan.FromMinutes(1), cancellationToken);
+                    await Task.Delay(TimeSpan.FromMinutes(15), cancellationToken);
                     continue;
                 }
 
@@ -233,7 +233,7 @@ namespace MudaeFarm
                 {
                     _logger.LogWarning(e, $"Could not roll daily kakera in {logPlace}.");
 
-                    await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);
+                    await Task.Delay(TimeSpan.FromMinutes(30), cancellationToken);
                     continue;
                 }
 
@@ -281,7 +281,7 @@ namespace MudaeFarm
                 {
                     _logger.LogWarning(e, $"Could not do pokeroll in {logPlace}.");
 
-                    await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);
+                    await Task.Delay(TimeSpan.FromMinutes(30), cancellationToken);
                     continue;
                 }
 
