@@ -10,7 +10,7 @@ namespace MudaeFarm
 {
     public interface IMudaeReplySender
     {
-        Task SendAsync(IMessageChannel channel, ReplyEvent @event, object substitutions, CancellationToken cancellationToken = default);
+        Task SendAsync(IMessageChannel claimChannel, ReplyEvent @event, object substitutions, CancellationToken cancellationToken = default);
     }
 
     public class MudaeReplySender : IMudaeReplySender
@@ -26,7 +26,7 @@ namespace MudaeFarm
 
         readonly Random _random = new Random();
 
-        public async Task SendAsync(IMessageChannel channel, ReplyEvent @event, object substitutions, CancellationToken cancellationToken = default)
+        public async Task SendAsync(IMessageChannel claimChannel, ReplyEvent @event, object substitutions, CancellationToken cancellationToken = default)
         {
             var selected = SelectItem(@event);
 
@@ -47,11 +47,11 @@ namespace MudaeFarm
                 lock (_random)
                     typingTime *= 0.9 + 0.2 * _random.NextDouble();
 
-                using (channel.Typing())
+                using (claimChannel.Typing())
                 {
                     await Task.Delay(typingTime, cancellationToken);
 
-                    await channel.SendMessageAsync(part);
+                    await claimChannel.SendMessageAsync(part);
                 }
             }
         }

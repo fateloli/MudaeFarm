@@ -70,7 +70,8 @@ namespace MudaeFarm
                                 .Configure<RollingOptions>(host.Configuration.GetSection(RollingOptions.Section))
                                 .Configure<CharacterWishlist>(host.Configuration.GetSection(CharacterWishlist.Section))
                                 .Configure<AnimeWishlist>(host.Configuration.GetSection(AnimeWishlist.Section))
-                                .Configure<BotChannelList>(host.Configuration.GetSection(BotChannelList.Section))
+                                .Configure<CommandChannelList>(host.Configuration.GetSection(CommandChannelList.Section))
+                                .Configure<ClaimChannelList>(host.Configuration.GetSection(ClaimChannelList.Section))
                                 .Configure<ReplyList>(host.Configuration.GetSection(ReplyList.Section))
                                 .Configure<UserWishlistList>(host.Configuration.GetSection(UserWishlistList.Section));
 

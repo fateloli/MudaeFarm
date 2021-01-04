@@ -60,6 +60,8 @@ Configuration is written in JSON and stored in messages that you can edit at any
     - `interval_seconds`: Interval in seconds between each roll (not applicable to daily kakera).
     - `default_per_hour`: Number of rolls that MudaeFarm will perform every hour at minimum if it was not able to determine the roll's result.
     - `daily_kakera_wait_hours`: Number of hours that MudaeFarm will wait for between each $dk. (set it to 10 for premium members, 20 for regular)
+    - `pokeroll_enabled`: Whether autorolling of pokemon is enabled.
+    - `pokeroll_command`: Command to use for rolling pokemon.
 
 ### `#wished-characters`
 
@@ -99,13 +101,23 @@ For example,
 
 Note: Legacy versions of MudaeFarm supported the excluding bracket notation like `is the order a rabbit? (excluding: chino kafuu)`. This was not very flexible, and is not supported by current versions of MudaeFarm, so you must use JSON objects instead.
 
-### `#bot-channels`
+### `#command-channels`
 
-This channel contains a list of channels in which MudaeFarm should roll and claim. Rules:
+This channel contains a list of channels in which MudaeFarm should **do rolls and other commands**. Rules:
 
 - Send channel ID only. This can be retrieved by enabling Discord developer mode and right-clicking on a channel.
 
 If MudaeFarm recognizes the ID, it will indicate success by replacing the message with a tagged channel.
+
+### `#claim-channels`
+
+This channel contains a list of channels in which MudaeFarm should **watch for claims and reacts**. Rules:
+
+- Send channel ID only. This can be retrieved by enabling Discord developer mode and right-clicking on a channel.
+
+If MudaeFarm recognizes the ID, it will indicate success by replacing the message with a tagged channel.
+
+- Generally, any channel ID put into #command-channels should be repeated here but not all channels here should be repeated in #command-channels.
 
 ### `#claim-replies`
 
